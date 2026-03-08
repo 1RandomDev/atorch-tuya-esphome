@@ -1,0 +1,267 @@
+esphome:
+  name: atorch-bw150
+  friendly_name: Atorch BW150
+
+esp8266:
+  board: d1_mini
+
+logger:
+  baud_rate: 0 # disable serial logging since we only have one port
+  level: INFO
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  min_auth_mode: WPA2
+
+ota:
+  platform: esphome
+
+# api:
+
+mqtt:
+  broker: !secret mqtt_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  id: atorch_bw150
+
+uart:
+    tx_pin: GPIO1
+    rx_pin: GPIO3
+    baud_rate: 115200
+
+tuya:
+  id: tuya_device
+  on_datapoint_update:
+    # Battery number
+    - sensor_datapoint: 116
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            id(battery_number).publish_state(x+1);
+    # Mode
+    - sensor_datapoint: 108
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            static const char* modes[] = {"CC", "CV", "CR", "CP", "BRT", "PT", "CT", "CDC", "CDCDC"};
+            id(mode_select).publish_state(modes[x]);
+    # Limit time
+    # - sensor_datapoint: 110
+    #   datapoint_type: int
+    #   then:
+    #     - lambda: |-
+    #         uint32_t time_min = ceil(((double)x / 100) * 60);
+    #         ESP_LOGI("main", "limit time changed %d", time_min);
+    #         id(limit_time).publish_state(time_min);
+
+sensor:
+  # Voltage
+  - platform: tuya
+    name: Voltage
+    sensor_datapoint: 101
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  # Current
+  - platform: tuya
+    name: Current
+    sensor_datapoint: 102
+    device_class: current
+    state_class: measurement
+    unit_of_measurement: A
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  # Power
+  - platform: tuya
+    name: Power
+    sensor_datapoint: 103
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: W
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  # Capacity
+  - platform: tuya
+    name: Capacity
+    sensor_datapoint: 105
+    icon: mdi:battery-medium
+    state_class: total_increasing
+    unit_of_measurement: mAh
+    accuracy_decimals: 0
+  # Energy
+  - platform: tuya
+    name: Energy
+    sensor_datapoint: 106
+    icon: mdi:counter
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: Wh
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  # CPU Temperature
+  - platform: tuya
+    name: CPU Temperature
+    sensor_datapoint: 113
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+  # MOSFET Temperature
+  - platform: tuya
+    name: MOSFET Temperature
+    sensor_datapoint: 114
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+  # External Temperature
+  - platform: tuya
+    name: External Temperature
+    sensor_datapoint: 118
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+  
+
+number:
+  # Set value
+  - platform: tuya
+    name: Set value
+    number_datapoint: 109
+    icon: mdi:tune-variant
+    mode: box
+    step: 0.01
+    min_value: 0
+    max_value: 25
+    multiply: 100
+  # Discharge cutoff voltage
+  - platform: tuya
+    name: Discharge cutoff voltage
+    number_datapoint: 112
+    device_class: voltage
+    unit_of_measurement: V
+    mode: box
+    step: 0.01
+    min_value: 0.9
+    max_value: 200
+    multiply: 100
+  # Charge cutoff voltage
+  - platform: tuya
+    name: Charge cutoff voltage
+    number_datapoint: 111
+    device_class: voltage
+    unit_of_measurement: V
+    mode: box
+    step: 0.01
+    min_value: 0.9
+    max_value: 200
+    multiply: 100
+  # Temp limit external
+  - platform: tuya
+    name: Temp limit external
+    number_datapoint: 117
+    device_class: temperature
+    unit_of_measurement: °C
+    mode: box
+    step: 1
+    min_value: 0
+    max_value: 150
+  # Temp limit MOSFET
+  - platform: tuya
+    name: Temp limit MOSFET
+    number_datapoint: 121
+    device_class: temperature
+    unit_of_measurement: °C
+    mode: box
+    step: 1
+    min_value: 0
+    max_value: 120
+  # Battery number
+  - platform: template
+    name: Battery number
+    id: battery_number
+    icon: mdi:numeric
+    optimistic: true
+    mode: box
+    step: 1
+    min_value: 1
+    max_value: 10
+    set_action:
+      - lambda: |-
+          id(tuya_device).set_enum_datapoint_value(116, x-1);
+  # Screen brightness
+  - platform: template
+    name: Screen brightness
+    icon: mdi:brightness-6
+    optimistic: true
+    step: 1
+    min_value: 1
+    max_value: 9
+    set_action:
+      - lambda: |-
+          id(tuya_device).set_integer_datapoint_value(107, x);
+  # Limit time
+  # - platform: template
+  #   name: Limit time
+  #   id: limit_time
+  #   unit_of_measurement: min
+  #   icon: mdi:timer-outline
+  #   optimistic: true
+  #   step: 1
+  #   min_value: 0
+  #   max_value: 5999
+  #   set_action:
+  #     - lambda: |-
+  #         uint32_t time_val = ((double)x / 60) * 100;
+  #         ESP_LOGI("main", "limit time set %d", time_val);
+  #         id(tuya_device).set_integer_datapoint_value(110, time_val);
+
+switch:
+  # Load enabled
+  - platform: tuya
+    name: Load enabled
+    switch_datapoint: 104
+    icon: mdi:power
+
+button:
+  # Reset statistics
+  - platform: template
+    name: Reset statistics
+    icon: mdi:rotate-left
+    on_press:
+      then:
+        - lambda: |-
+            id(tuya_device).set_boolean_datapoint_value(119, true);
+
+select:
+  # Mode
+  - platform: template
+    name: Mode
+    id: mode_select
+    options: ["CC", "CV", "CR", "CP", "BRT", "PT", "CT", "CDC", "CDCDC"]
+    optimistic: true 
+    set_action:
+      - lambda: |-
+            static const char* modes[] = {"CC", "CV", "CR", "CP", "BRT", "PT", "CT", "CDC", "CDCDC"};
+            uint8_t mode_id = 0;
+            for(uint8_t i=0; i<sizeof(modes); i++) {
+              if(x == modes[i]) {
+                mode_id = i;
+                break;
+              }
+            }
+            id(tuya_device).set_enum_datapoint_value(108, mode_id);
