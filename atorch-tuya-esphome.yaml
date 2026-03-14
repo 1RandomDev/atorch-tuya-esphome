@@ -38,13 +38,6 @@ tuya:
       then:
         - lambda: |-
             id(battery_number).publish_state(x+1);
-    # Mode
-    - sensor_datapoint: 108
-      datapoint_type: enum
-      then:
-        - lambda: |-
-            static const char* modes[] = {"CC", "CV", "CR", "CP", "BRT", "PT", "CT", "CDC", "CDCDC"};
-            id(mode_select).publish_state(modes[x]);
     # Limit time
     # - sensor_datapoint: 110
     #   datapoint_type: int
@@ -198,7 +191,7 @@ number:
     mode: box
     step: 1
     min_value: 1
-    max_value: 10
+    max_value: 18
     set_action:
       - lambda: |-
           id(tuya_device).set_enum_datapoint_value(116, x-1);
@@ -248,19 +241,16 @@ button:
 
 select:
   # Mode
-  - platform: template
+  - platform: tuya
     name: Mode
-    id: mode_select
-    options: ["CC", "CV", "CR", "CP", "BRT", "PT", "CT", "CDC", "CDCDC"]
-    optimistic: true 
-    set_action:
-      - lambda: |-
-            static const char* modes[] = {"CC", "CV", "CR", "CP", "BRT", "PT", "CT", "CDC", "CDCDC"};
-            uint8_t mode_id = 0;
-            for(uint8_t i=0; i<sizeof(modes); i++) {
-              if(x == modes[i]) {
-                mode_id = i;
-                break;
-              }
-            }
-            id(tuya_device).set_enum_datapoint_value(108, mode_id);
+    enum_datapoint: 108
+    options:
+      0: "CC"
+      1: "CV"
+      2: "CR"
+      3: "CP"
+      4: "BRT"
+      5: "PT"
+      6: "CT"
+      7: "CDC"
+      8: "CDCDC"
