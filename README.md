@@ -1,6 +1,6 @@
 # Atorch Tuya ESPHome
 
-Instructions and examples on how to convert Tuya enabled electronic loads from Atorch to ESPHome for local control with HomeAssistant. The script is based on the [Tuya MCU component](https://esphome.io/components/tuya/).
+Instructions and examples on how to convert Tuya enabled electronic loads from Atorch to ESPHome for local control with HomeAssistant.
 
 ![HomeAssistant controls](images/homeassistant-entities-controls.png)
 ![HomeAssistant sensors](images/homeassistant-entities-sensors.png)
@@ -30,14 +30,14 @@ First we need to prepare the ESPHome software and flash the ESP8266-12F. This ca
 pip3 install esphome
 
 # Clone this external component
-git clone https://github.com/1RandomDev/atorch-tuya-esphome.git
-cd atorch-tuya-esphome
+git clone https://github.com/1RandomDev/atorch-bw150-esphome.git
+cd atorch-bw150-esphome
 
 # Copy example config
 cp secrets.yaml.sample secrets.yaml
 
 # Validate configuration and upload code
-esphome run atorch-tuya-esphome.yaml
+esphome run atorch-bw150-esphome.yaml
 ```
 
 Before soldering the module, verify that it's connected to your WiFi and you're able to upload OTA updates.
@@ -56,7 +56,7 @@ The existing Tuya based WiFi module (small standing PCB next to the buzzer) need
 ## List of discovered Tuya data points
 If you have an idea what DP 115 and 120 are used for, feel free to open an issue.
 
-DP Id | Type | Description | Prescaler | Writable
+DP&nbsp;Id | Type | Description | Prescaler | Writable
 -- | -- | -- | -- | --
 101 | Integer | Cur voltage (V) | / 100 |
 102 | Integer | Cur current (A) | / 1000 |
@@ -71,7 +71,7 @@ DP Id | Type | Description | Prescaler | Writable
 111 | Integer | Charge cutoff voltage (V) | / 100 | X
 112 | Integer | Discharge cutoff voltage (V) | / 100| X
 113 | Integer | CPU temperature (°C) | / 10 | 
-114 | Integer | MOS temperature (°C) | / 10 | 
+114 | Integer | MOSFET temperature (°C) | / 10 | 
 116 | Enum | Selected battery number | + 1 | X
 115 | | *unknown, probably not readable* | | X
 117 | Integer | Temp limit ext. sensor (°C) |  | X
